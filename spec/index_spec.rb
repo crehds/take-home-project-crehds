@@ -25,6 +25,6 @@ RSpec.describe 'ReceipeGenerator Tests' do
     app.calculate_taxes
 
     expect(app.calculate_total).to eq(98.38)
-    expect(app.taxes).to eq(7.90)
+    expect(app.taxes).to eq(7.9)
   end
 end
