@@ -1,30 +1,10 @@
-PRODUCTS = [
-  {
-    cant: 2,
-    name: 'book',
-    price: 12.49,
-    type: 'books',
-    imported: false
-  },
-  {
-    cant: 1,
-    name: 'music CD',
-    price: 14.99,
-    type: 'music',
-    imported: false
-  },
-  {
-    cant: 1,
-    name: 'chocolate bar',
-    price: 0.85,
-    type: 'food',
-    imported: false
-  }
-].freeze
+require 'json'
+
+INPUTS = JSON.parse(File.read('./spec/inputs.json'))
 
 EXCLUDE_BASIC_TAX = %w[books medicine food].freeze
 
-class ReceipeGenerator
+class RecipeGenerator
   attr_accessor :products, :taxes
 
   def initialize(products)
@@ -32,41 +12,48 @@ class ReceipeGenerator
     @taxes = 0
   end
 
-  def start
+  def process_product
     show_products
     calculate_taxes
-    recipe
+    show_recipe
   end
 
   def show_products
     puts 'Products:'
     products.each do |product|
-      puts "#{product[:cant]} #{product[:name]} at #{product[:price]}"
+      puts "#{product['cant']} #{product['name']} at #{product['price']}"
     end
   end
 
   def basic_tax?(product)
-    EXCLUDE_BASIC_TAX.include?(product[:type])
+    EXCLUDE_BASIC_TAX.include?(product['type'])
   end
 
   def import_tax?(product)
-    product[:imported] == true
+    product['imported'] == true
   end
 
-  def apply_tax(tax, product)
-    tax = (product[:price] * tax).round(2)
-    new_price = (product[:price] + tax).truncate(2)
-    product[:price] = new_price
-    new_tax = (@taxes + tax).truncate(2)
+  def round(tax)
+    last_digit = tax.to_s.chars.last.to_i
+    last_digit > 5 ? tax.round(1) : tax
+  end
+
+  def get_tax(tax, product)
+    result_tax = (product['price'] * tax).truncate(2)
+    result_tax = round(result_tax) * product['cant']
+    new_tax = @taxes + result_tax
     @taxes = new_tax
-    product
+    result_tax
   end
 
   def calculate_taxes
     @products = products.map do |product|
-      product = apply_tax(0.1, product) unless basic_tax?(product)
-      product = apply_tax(0.05, product) if import_tax?(product)
+      tax1 = 0
+      tax2 = 0
+      tax1 = get_tax(0.1, product) unless basic_tax?(product)
+      tax2 = get_tax(0.05, product) if import_tax?(product)
 
+      product['price'] = format('%.2f', ((product['price'] * product['cant']) + tax1 + tax2)).to_f
       product
     end
   end
@@ -76,13 +63,10 @@ class ReceipeGenerator
   end
 
   def calculate_total
-    products.inject(0) do |sum, product|
-      temp = product[:price] * product[:cant]
-      sum + temp
-    end
+    products.inject(0) { |sum, product| sum + product['price'] }.truncate(2)
   end
 
-  def recipe
+  def show_recipe
     puts "##{'-' * 40}#"
     puts 'Recipe with taxes'
     show_products
@@ -91,5 +75,7 @@ class ReceipeGenerator
   end
 end
 
-app = ReceipeGenerator.new(PRODUCTS)
-app.start
+# input_number = ARGV.shift
+
+# app = RecipeGenerator.new(INPUTS["input_#{input_number}"])
+# app.process_product
