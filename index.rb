@@ -13,12 +13,6 @@ class RecipeGenerator
     @taxes = 0
   end
 
-  def process_product
-    show_products(products)
-    calculate_taxes
-    show_recipe(products, taxes)
-  end
-
   def exclude_basic_tax?(product)
     EXCLUDE_BASIC_TAX.include?(product['type'])
   end
@@ -52,8 +46,10 @@ class RecipeGenerator
     end
   end
 
-  def calculate_total
-    products.inject(0) { |sum, product| sum + product['price'] }.truncate(2)
+  def process_products
+    show_products(products)
+    calculate_taxes
+    show_recipe(products, taxes)
   end
 end
 
