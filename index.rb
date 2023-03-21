@@ -20,7 +20,7 @@ PRODUCTS = [
     type: 'food',
     imported: false
   }
-]
+].freeze
 
 EXCLUDE_BASIC_TAX = %w[books medicine food].freeze
 
